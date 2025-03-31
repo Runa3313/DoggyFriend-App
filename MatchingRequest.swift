@@ -16,7 +16,8 @@ struct MatchingRequestView: View {
                         .font(.title)
                         .padding(10)
                         .background(
-                            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)]),
+                                           startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                         .clipShape(Circle())
                         .shadow(radius: 5)
@@ -113,6 +114,3 @@ struct MatchingRequestView: View {
     }
 }
 
-#Preview {
-    MatchingRequestView(requests: .constant([MatchRequest(dogName: "モカ", requesterName: "Alice", isApproved: false)]))
-}
