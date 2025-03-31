@@ -1,0 +1,62 @@
+import SwiftUI
+
+struct UserSelectionView: View {
+    @Binding var isRegistered: Bool
+    @Binding var userType: String
+
+    var body: some View {
+        ZStack {
+            // 🌈 明るめの青→紫のグラデーション背景
+            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)]),
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+                .edgesIgnoringSafeArea(.all)
+
+            VStack(spacing: 30) {
+                // アイコンとタイトル
+                Image(systemName: "pawprint.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 90, height: 90)
+                    .foregroundColor(.white)
+                    .shadow(radius: 5)
+
+                Text("Welcome to DogMatch!")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+
+                Text("犬好きとワンちゃんをつなげるアプリ")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.8))
+
+                // 🏠 犬を飼っている人向けボタン
+                NavigationLink(destination: OwnerRegistrationView(isRegistered: $isRegistered)) {
+                    selectionButtonLabel(text: "犬を飼っている", color: Color.white.opacity(0.4), textColor: .white, icon: "house.fill")
+                }
+
+                // ❤️ 犬に触れたい人向けボタン
+                NavigationLink(destination: LoverRegistrationView(isRegistered: $isRegistered)) {
+                    selectionButtonLabel(text: "犬に触れたい", color: Color.white.opacity(0.4), textColor: .white, icon: "heart.fill")
+                }
+            }
+            .padding()
+        }
+    }
+
+    // 🎨 ボタンデザイン
+    private func selectionButtonLabel(text: String, color: Color, textColor: Color, icon: String) -> some View {
+        HStack {
+            Image(systemName: icon)
+            Text(text).fontWeight(.bold)
+        }
+        .frame(width: 220, height: 50)
+        .background(color)
+        .foregroundColor(textColor)
+        .cornerRadius(12)
+        .shadow(radius: 5) // より目立たせるためにシャドウを強調
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.6), lineWidth: 1) // 輪郭を強調
+        )
+    }
+}
