@@ -2,14 +2,14 @@ import SwiftUI
 import MapKit
 
 struct HomeView: View {
-    @Binding var requests: [MatchRequest] // @Binding を使って親ビューから渡す
-    
+    @Binding var requests: [MatchRequest]
+
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
-    @State private var selectedDog: Dog?
-    @State private var showRequestButton = false
+    
+    @State private var selectedDog: Dog? // 選択された犬を保持
 
     struct Dog: Identifiable {
         let id = UUID()
@@ -18,70 +18,82 @@ struct HomeView: View {
     }
 
     let dogs = [
-        Dog(name: "モカ", coordinate: CLLocationCoordinate2D(latitude: 37.775, longitude: -122.418)),
+        Dog(name: "モカ", coordinate: CLLocationCoordinate2D(latitude: 37.785, longitude: -122.418)),
         Dog(name: "レオ", coordinate: CLLocationCoordinate2D(latitude: 37.773, longitude: -122.420))
     ]
 
     var body: some View {
-        ZStack {
+        VStack {
             Map(coordinateRegion: $region, annotationItems: dogs) { dog in
                 MapAnnotation(coordinate: dog.coordinate) {
                     Button(action: {
-                        selectedDog = dog
-                        showRequestButton = true
+                        selectedDog = dog // 犬を選択
                     }) {
                         VStack {
                             Image(systemName: "pawprint.fill")
-                                .foregroundColor(.brown)
+                                .foregroundColor(.white)
                                 .font(.title)
-                                .padding(5)
-                                .background(Color.white.opacity(0.8))
-                                .clipShape(Circle())
+                                .padding(10)
+                                .background(Circle().fill(Color.blue))
+                                .shadow(radius: 5)
                             
                             Text(dog.name)
                                 .font(.caption)
                                 .bold()
-                                .padding(4)
+                                .padding(6)
                                 .background(Color.white.opacity(0.7))
-                                .cornerRadius(5)
+                                .cornerRadius(8)
+                                .shadow(radius: 3)
                         }
                     }
                 }
             }
-            .edgesIgnoringSafeArea(.all)
             
-            if let dog = selectedDog, showRequestButton {
+            if let dog = selectedDog {
+                // "会いたい！" ボタンのデザイン
                 VStack {
-                    Spacer()
-                    VStack {
-                        Text(dog.name)
-                            .font(.title)
-                            .bold()
-                        Button("会いたい") {
-                            sendRequest(for: dog)
-                            selectedDog = nil
-                            showRequestButton = false
-                        }
-                        .padding()
+                    Text("\(dog.name) に会いたい！")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+                        .padding(.bottom, 10)
+
+                    Text("この犬と会いたい場合は、リクエストを送ってください。")
+                        .font(.body)
+                        .foregroundColor(.gray)
+                        .padding(.bottom, 20)
+                    
+                    Button(action: {
+                        sendRequest(for: dog)
+                    }) {
+                        Text("リクエストを送る")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .cornerRadius(15)
+                            .shadow(radius: 10)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(20)
-                    .shadow(radius: 5)
+                    .padding(.horizontal)
                 }
-                .transition(.move(edge: .bottom))
+                .padding()
+                .background(Color.white.opacity(0.9))
+                .cornerRadius(20)
+                .shadow(radius: 10)
+                .transition(.slide)
+                .animation(.easeInOut(duration: 0.3))
             }
         }
     }
 
     func sendRequest(for dog: Dog) {
-        let request = MatchRequest(id: UUID(), dogName: dog.name, requesterName: "あなた", isApproved: false)
+        let request = MatchRequest(dogName: dog.name, requesterName: "あなた", isApproved: false)
         requests.append(request)
+        
+        // リクエスト送信後、選択された犬をリセット
+        selectedDog = nil
     }
-
-}
-
-#Preview {
-    HomeView(requests: .constant([]))  // プレビューのために空の requests を渡す
 }
