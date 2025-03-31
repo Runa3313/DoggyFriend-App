@@ -1,30 +1,21 @@
-import SwiftUICore
 import SwiftUI
-struct ContentView: View {
-    // グローバルスコープの MatchRequest を使用
-    @State private var requests: [MatchRequest] = []
 
+struct ProfileView: View {
     var body: some View {
-        TabView {
-            HomeView(requests: $requests) // マップ画面
-                .tabItem {
-                    Label("マップ", systemImage: "map")
-                }
+        VStack {
+            Text("プロフィール画面")
+                .font(.largeTitle)
+                .padding()
 
-            MatchingRequestView(requests: $requests) // マッチングリクエスト画面
-                .tabItem {
-                    Label("リクエスト", systemImage: "bell")
-                }
+            Text("ユーザー情報が表示されます")
+                .padding()
 
-            ProfileView() // プロフィール画面
-                .tabItem {
-                    Label("プロフィール", systemImage: "person")
-                }
+            Spacer()
         }
+        .navigationTitle("プロフィール")
     }
 }
 
-
 #Preview {
-    ContentView()
+    ProfileView()
 }
