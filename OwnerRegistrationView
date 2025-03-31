@@ -1,0 +1,82 @@
+import SwiftUI
+
+struct OwnerRegistrationView: View {
+    @Binding var isRegistered: Bool
+    @AppStorage("ownerName") private var ownerName: String = ""
+    @AppStorage("dogName") private var dogName: String = ""
+    @AppStorage("dogGender") private var dogGender: String = "オス"
+    @AppStorage("dogAge") private var dogAge: Int = 1
+    @AppStorage("dogBreed") private var dogBreed: String = ""
+
+    var body: some View {
+        ZStack {
+            // 🌈 明るいグラデーション背景
+            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.purple.opacity(0.7)]),
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+                .edgesIgnoringSafeArea(.all)
+
+            VStack(spacing: 25) {
+                Text("わんこ情報の登録")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .padding()
+
+                // 🐕 飼い主名と犬名入力
+                CustomTextField(placeholder: "飼い主の名前", text: $ownerName)
+                CustomTextField(placeholder: "犬の名前", text: $dogName)
+
+                // 🐾 犬の性別選択
+                Picker("性別", selection: $dogGender) {
+                    Text("オス").tag("オス")
+                    Text("メス").tag("メス")
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+                .background(Color.white.opacity(0.4))
+                .cornerRadius(12)
+
+                // 🐶 犬の年齢設定
+                Stepper(value: $dogAge, in: 1...20) {
+                    Text("年齢: \(dogAge)歳")
+                        .foregroundColor(.white) // よりはっきりした白色に変更
+                        .font(.headline)  // 少し大きめのフォントサイズに変更
+                }
+                .padding()
+                .background(Color.white.opacity(0.4))
+                .cornerRadius(12)
+
+                // 🐕 犬種入力
+                CustomTextField(placeholder: "犬種", text: $dogBreed)
+
+                // 完了ボタン
+                Button(action: {
+                    isRegistered = true // 登録が完了したら isRegistered を true にする
+                }) {
+                    Text("登録完了")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.green)
+                        .cornerRadius(12)
+                        .shadow(radius: 5)
+                }
+            }
+            .padding()
+        }
+    }
+
+    // 🎨 共通のカスタムテキストフィールド
+    private func CustomTextField(placeholder: String, text: Binding<String>) -> some View {
+        TextField(placeholder, text: text)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            .padding()
+            .background(Color.white.opacity(0.4))
+            .cornerRadius(12)
+            .foregroundColor(.white)
+    }
+}
+
+#Preview {
+    OwnerRegistrationView(isRegistered: .constant(false))
+}
