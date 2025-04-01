@@ -1,99 +1,120 @@
 import SwiftUI
-import MapKit
 
-struct HomeView: View {
-    @Binding var requests: [MatchRequest]
-
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-    )
+struct ChatView: View {
+    let dogName: String
+    let requesterName: String
     
-    @State private var selectedDog: Dog? // 選択された犬を保持
-
-    struct Dog: Identifiable {
-        let id = UUID()
-        let name: String
-        let coordinate: CLLocationCoordinate2D
+    @State private var messageText = ""
+    @State private var messages: [Message] = [] // メッセージの配列
+    
+    private let chatKey: String
+    
+    init(dogName: String, requesterName: String) {
+        self.dogName = dogName
+        self.requesterName = requesterName
+        self.chatKey = "\(dogName)_\(requesterName)_chat"
     }
-
-    let dogs = [
-        Dog(name: "モカ", coordinate: CLLocationCoordinate2D(latitude: 37.785, longitude: -122.418)),
-        Dog(name: "レオ", coordinate: CLLocationCoordinate2D(latitude: 37.773, longitude: -122.420))
-    ]
-
+    
+    struct Message: Identifiable, Codable {
+        let id = UUID()
+        let text: String
+        let isUser: Bool // 自分のメッセージかどうか
+    }
+    
     var body: some View {
         VStack {
-            Map(coordinateRegion: $region, annotationItems: dogs) { dog in
-                MapAnnotation(coordinate: dog.coordinate) {
-                    Button(action: {
-                        selectedDog = dog // 犬を選択
-                    }) {
-                        VStack {
-                            Image(systemName: "pawprint.fill")
-                                .foregroundColor(.white)
-                                .font(.title)
-                                .padding(10)
-                                .background(Circle().fill(Color.blue))
-                                .shadow(radius: 5)
-                            
-                            Text(dog.name)
-                                .font(.caption)
-                                .bold()
-                                .padding(6)
-                                .background(Color.white.opacity(0.7))
-                                .cornerRadius(8)
-                                .shadow(radius: 3)
+            // チャット画面のタイトル
+            Text("\(requesterName) さんと \(dogName) のチャット")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.blue)
+                .padding()
+            
+            // メッセージリスト
+            ScrollViewReader { scrollView in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(messages) { message in
+                            HStack {
+                                if message.isUser {
+                                    Spacer()
+                                    Text(message.text)
+                                        .padding()
+                                        .background(Color.blue.opacity(0.8))
+                                        .foregroundColor(.white)
+                                        .cornerRadius(15)
+                                } else {
+                                    Text(message.text)
+                                        .padding()
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(15)
+                                    Spacer()
+                                }
+                            }
+                            .padding(.horizontal)
                         }
+                    }
+                    .padding(.top, 10)
+                }
+                .onChange(of: messages) { _ in
+                    withAnimation {
+                        scrollView.scrollTo(messages.last?.id, anchor: .bottom)
                     }
                 }
             }
             
-            if let dog = selectedDog {
-                // "会いたい！" ボタンのデザイン
-                VStack {
-                    Text("\(dog.name) に会いたい！")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                        .padding(.bottom, 10)
-
-                    Text("この犬と会いたい場合は、リクエストを送ってください。")
-                        .font(.body)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, 20)
-                    
-                    Button(action: {
-                        sendRequest(for: dog)
-                    }) {
-                        Text("リクエストを送る")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]), startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .cornerRadius(15)
-                            .shadow(radius: 10)
-                    }
+            Spacer()
+            
+            // メッセージ入力フィールドと送信ボタン
+            HStack {
+                TextField("メッセージを入力...", text: $messageText, onCommit: sendMessage)
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .shadow(radius: 5)
                     .padding(.horizontal)
+                
+                Button(action: sendMessage) {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 5)
                 }
-                .padding()
-                .background(Color.white.opacity(0.9))
-                .cornerRadius(20)
-                .shadow(radius: 10)
-                .transition(.slide)
-                .animation(.easeInOut(duration: 0.3))
+                .padding(.trailing)
             }
+            .padding(.bottom)
+        }
+        .navigationTitle("チャット")
+        .background(Color.gray.opacity(0.05))
+        .onAppear {
+            loadMessages()
         }
     }
-
-    func sendRequest(for dog: Dog) {
-        let request = MatchRequest(dogName: dog.name, requesterName: "あなた", isApproved: false)
-        requests.append(request)
-        
-        // リクエスト送信後、選択された犬をリセット
-        selectedDog = nil
+    
+    func sendMessage() {
+        guard !messageText.isEmpty else { return }
+        let newMessage = Message(text: messageText, isUser: true)
+        messages.append(newMessage)
+        messageText = ""
+        saveMessages()
     }
+    
+    func loadMessages() {
+        if let savedData = UserDefaults.standard.data(forKey: chatKey),
+           let savedMessages = try? JSONDecoder().decode([Message].self, from: savedData) {
+            messages = savedMessages
+        }
+    }
+    
+    func saveMessages() {
+        if let encoded = try? JSONEncoder().encode(messages) {
+            UserDefaults.standard.set(encoded, forKey: chatKey)
+        }
+    }
+}
+
+#Preview {
+    ChatView(dogName: "モカ", requesterName: "Alice")
 }
